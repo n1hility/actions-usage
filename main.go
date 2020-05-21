@@ -1,24 +1,24 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
+    "context"
+    "fmt"
+    "io/ioutil"
+    "os"
+    "path/filepath"
+    "strings"
+    "time"
 
-	"github.com/google/go-github/v31/github"
-	"github.com/mitchellh/go-homedir"
-	"golang.org/x/oauth2"
+    "github.com/google/go-github/v31/github"
+    "github.com/mitchellh/go-homedir"
+    "golang.org/x/oauth2"
 )
 
 func trunc(str string, size int) string {
-	if len(str) > size {
-		return str[0:size]
-	}
-	return str
+    if len(str) > size {
+        return str[0:size]
+    }
+    return str
 }
 
 func printChar(char string) {
@@ -29,7 +29,7 @@ func formatDuration(duration time.Duration) string {
     days := duration / (24 * time.Hour)
     hours := (duration - (days * 24 * time.Hour)) / time.Hour
     mins := (duration - ((days * 24 + hours) * time.Hour)) / time.Minute
-    
+
     if days > 0 {
         return fmt.Sprintf("%02d d %02d h", days, hours)
     } 
@@ -53,28 +53,28 @@ func readToken(name string) (string, error) {
 
 func createClient(token string) *github.Client {
     ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(context.Background(), ts)
+        &oauth2.Token{AccessToken: token},
+    )
+    tc := oauth2.NewClient(context.Background(), ts)
 
-	return github.NewClient(tc)
+    return github.NewClient(tc)
 }
 
 func getAllRepositories(ctx context.Context, client *github.Client, org string) ([]*github.Repository, error){
     opt := &github.RepositoryListByOrgOptions{
-		ListOptions: github.ListOptions{PerPage: 100},
+        ListOptions: github.ListOptions{PerPage: 100},
     }
     var allRepos []*github.Repository
-	for {
-		repos, resp, err := client.Repositories.ListByOrg(ctx, org, opt)
-		if err !=  nil {
+    for {
+        repos, resp, err := client.Repositories.ListByOrg(ctx, org, opt)
+        if err !=  nil {
             return nil, err
         } 
-		allRepos = append(allRepos, repos...)
-		if resp.NextPage == 0 {
-			break
-		}
-		opt.Page = resp.NextPage
+        allRepos = append(allRepos, repos...)
+        if resp.NextPage == 0 {
+            break
+        }
+        opt.Page = resp.NextPage
     }
     
     return allRepos, nil
@@ -83,20 +83,20 @@ func getAllRepositories(ctx context.Context, client *github.Client, org string) 
 func getAllWorkflowRuns(ctx context.Context, client *github.Client, repos []*github.Repository, print func (string))  ([]*github.WorkflowRun, error) {
     var allRuns []*github.WorkflowRun
     var err error
-	for _, repo := range repos {
+    for _, repo := range repos {
         var retries,retries2 int
-		print(".")
-		allRuns, retries, err = getWorkflowRunsByStatus(context.Background(), client, repo.GetFullName(), "in_progress", allRuns)
-		if err == nil {
+        print(".")
+        allRuns, retries, err = getWorkflowRunsByStatus(context.Background(), client, repo.GetFullName(), "in_progress", allRuns)
+        if err == nil {
             allRuns, retries2, err = getWorkflowRunsByStatus(context.Background(), client, repo.GetFullName(), "queued", allRuns)
             retries += retries2
         }
         if retries > 0 {
             print(strings.Repeat("e", retries))
         }
-		if err != nil {
-			return nil, err
-		}
+        if err != nil {
+            return nil, err
+        }
     }
 
     return allRuns, nil
@@ -107,15 +107,15 @@ func computeJobs(ctx context.Context, client *github.Client, org string, allRuns
     var tq, tr, tc int
     var results []string
     var err error
-	for i, run := range allRuns {
-		key := run.GetWorkflowURL()
-		workflow := workflows[key]
-		if workflow == nil {
-			workflow, _, err = getWorkflow(ctx, client, key)
-			if err != nil {
-				return nil, 0, 0, 0, err
-			}
-			workflows[key] = workflow
+    for i, run := range allRuns {
+        key := run.GetWorkflowURL()
+        workflow := workflows[key]
+        if workflow == nil {
+            workflow, _, err = getWorkflow(ctx, client, key)
+            if err != nil {
+                return nil, 0, 0, 0, err
+            }
+            workflows[key] = workflow
         }
         queued, inProgress, completed, err := countWorkflowRunJobs(ctx, client, org, run.GetRepository().GetName(), run.GetID())
         if err != nil {
@@ -135,47 +135,47 @@ func computeJobs(ctx context.Context, client *github.Client, org string, allRuns
 }
 
 func getWorkflowRunsByStatus(ctx context.Context, client *github.Client, fullRepo string, status string, runs []*github.WorkflowRun) ([]*github.WorkflowRun, int, error) {
-	opt := &github.ListWorkflowRunsOptions{
-		Status:      status,
-		ListOptions: github.ListOptions{PerPage: 100},
-	}
+    opt := &github.ListWorkflowRunsOptions{
+        Status:      status,
+        ListOptions: github.ListOptions{PerPage: 100},
+    }
 
     retries := 5
-	for {
-		listRuns, resp, err := listRepositoryWorkflowRuns(ctx, client, fullRepo, opt)
-		if err != nil {
+    for {
+        listRuns, resp, err := listRepositoryWorkflowRuns(ctx, client, fullRepo, opt)
+        if err != nil {
             if (retries > 0 && resp.StatusCode >= 500 && resp.StatusCode < 600) {
                 retries--
                 continue
             }
-			return runs, 5 - retries, err
-		}
-		runs = append(runs, listRuns.WorkflowRuns...)
-		if resp.NextPage == 0 {
-			break
-		}
-		opt.Page = resp.NextPage
-	}
+            return runs, 5 - retries, err
+        }
+        runs = append(runs, listRuns.WorkflowRuns...)
+        if resp.NextPage == 0 {
+            break
+        }
+        opt.Page = resp.NextPage
+    }
 
-	return runs, 0, nil
+    return runs, 0, nil
 }
 
 func countWorkflowRunJobs(ctx context.Context, client *github.Client, owner string, repo string, runID int64) (int, int, int, error) {
-	opt := &github.ListWorkflowJobsOptions{
-		ListOptions: github.ListOptions{PerPage: 100},
-	}
+    opt := &github.ListWorkflowJobsOptions{
+        ListOptions: github.ListOptions{PerPage: 100},
+    }
 
     var jobs []*github.WorkflowJob
-	for {
-		listJobs, resp, err := client.Actions.ListWorkflowJobs(ctx, owner, repo, runID, opt)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-		jobs = append(jobs, listJobs.Jobs...)
-		if resp.NextPage == 0 {
-			break
-		}
-		opt.Page = resp.NextPage
+    for {
+        listJobs, resp, err := client.Actions.ListWorkflowJobs(ctx, owner, repo, runID, opt)
+        if err != nil {
+            return 0, 0, 0, err
+        }
+        jobs = append(jobs, listJobs.Jobs...)
+        if resp.NextPage == 0 {
+            break
+        }
+        opt.Page = resp.NextPage
     }
 
     counts := make(map[string]int)
@@ -183,7 +183,7 @@ func countWorkflowRunJobs(ctx context.Context, client *github.Client, owner stri
         counts[job.GetStatus()]++
     }
 
-	return counts["queued"], counts["in_progress"], counts["completed"], nil
+    return counts["queued"], counts["in_progress"], counts["completed"], nil
 }
 
 
@@ -194,7 +194,7 @@ func main() {
     }
 
     org := os.Args[1]
-    
+
     token, err := readToken("actions-usage.tok")
     if err != nil {
         fmt.Printf("Token not found!\n")
@@ -203,7 +203,7 @@ func main() {
         fmt.Printf("'actions-usage.tok'\n\n")
         fmt.Printf("https://github.com/settings/tokens\n\n")
         return
-    }    
+    }
 
     client := createClient(token)
 
@@ -213,9 +213,9 @@ func main() {
         return
     }
 
-    fmt.Printf("Finding workflows running on all repositories on %v", org)    
-	allRuns, err := getAllWorkflowRuns(context.Background(), client, allRepos, printChar)
-	if err != nil {
+    fmt.Printf("Finding workflows running on all repositories on %v", org)
+    allRuns, err := getAllWorkflowRuns(context.Background(), client, allRepos, printChar)
+    if err != nil {
         fmt.Printf("Error: %v\n", err)
         return
     }
