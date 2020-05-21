@@ -7,5 +7,5 @@ go get
 for i in $PLATFORMS; do
   rm -rf target/$i; mkdir -p target/$i/$NAME
   GOOS=$i go build -o target/$i/$NAME
-  (cd target/$i; tar czvf $NAME-$VERSION.tar.gz; zip $NAME-$VERSION.zip -r $NAME)
+  (cd target/$i; tar czvf $NAME-$VERSION.tar.gz $NAME; zip $NAME-$VERSION.zip -r $NAME)
 done;
