@@ -126,7 +126,7 @@ func computeJobs(ctx context.Context, client *github.Client, org string, allRuns
         age := time.Now().Sub(run.GetCreatedAt().Time).Round(time.Minute)
 
         source := fmt.Sprintf("%v:%v", run.GetHeadRepository().GetFullName(), run.GetHeadBranch())
-        results = append(results, fmt.Sprintf("%3v.  %10v  %18v  %20v  %13v  %-15v  %9v  %v\n", i+1, run.GetID(), count, trunc(workflow.GetName(), 20), 
+        results = append(results, fmt.Sprintf("%3v.  %10v  %18v  %20v  %13v  %-15v  %10v  %v\n", i+1, run.GetID(), count, trunc(workflow.GetName(), 20), 
                          trunc(run.GetEvent(),13), trunc(run.GetRepository().GetName(), 15), formatDuration(age), trunc(source, 40)))
         print(".")
     }
@@ -223,7 +223,7 @@ func main() {
 
     fmt.Printf("Analyzing jobs")
     results, tq, tr, tc, err := computeJobs(context.Background(), client, org, allRuns, printChar)    
-    fmt.Printf("\n\n%4v  %10v  %18v  %20v  %13v  %-15v  %-9v  %v\n", "", "wf id", "queue/  run / comp", "name", "event", "repo", "created", "source")
+    fmt.Printf("\n\n%4v  %10v  %18v  %20v  %13v  %-15v  %-10v  %v\n", "", "wf id", "queue/  run / comp", "name", "event", "repo", " created", "source")
     fmt.Printf("%4v  %v\n", "", strings.Repeat("-", 137))
     for _, line := range results {
         fmt.Printf(line);
