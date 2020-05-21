@@ -28,7 +28,7 @@ Analyzing jobs......
 
 ### Setup
 
-1. Extract and install action-usage from the respective platform archive
+1. [Download](https://github.com/n1hility/actions-usage/releases/tag/v0.1.0), extract and install action-usage from the respective platform archive.
 2. Create a GitHub Personal Access Token: https://github.com/settings/tokens
 3. You only need a read-only token so deselect all check boxes
 4. Cut and paste the token into a token file in your home directory:
