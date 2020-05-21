@@ -34,7 +34,7 @@ Analyzing jobs......
 4. Cut and paste the token into a token file in your home directory:
 
 ```
-echo [PASTE HERE] > ~/.actions-usage.tok
+echo [PASTE HERE] > ~/actions-usage.tok
 ```
 
 ### Building 
