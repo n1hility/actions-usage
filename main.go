@@ -199,8 +199,9 @@ func main() {
     if err != nil {
         fmt.Printf("Token not found!\n")
         fmt.Printf("Before you can use this tool, you must create a read-only Github personal \n")
-        fmt.Printf("access token and place it in your home directory under the name:\n")
-        fmt.Printf("actions-usage.tok\n")
+        fmt.Printf("access token and place it in your home directory under the name:\n\n")
+        fmt.Printf("'actions-usage.tok'\n\n")
+        fmt.Printf("https://github.com/settings/tokens\n\n")
         return
     }    
 
