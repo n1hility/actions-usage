@@ -84,6 +84,10 @@ func getAllWorkflowRuns(ctx context.Context, client *github.Client, repos []*git
     var allRuns []*github.WorkflowRun
     var err error
     for _, repo := range repos {
+        // Skip if repo name contains ghsa as security advisory forks do not have GH Actions enabled
+        if strings.Contains(repo.GetFullName(), "ghsa") {
+            continue
+        }
         var retries,retries2 int
         print(".")
         allRuns, retries, err = getWorkflowRunsByStatus(context.Background(), client, repo.GetFullName(), "in_progress", allRuns)
